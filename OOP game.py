@@ -1,6 +1,9 @@
+#rrrrrrrrrrrrrrrrrrrrr
 from time import sleep
 import random
 
+class forPass:
+    pass
 
 class Stats:
     def __init__(self, name, power, health, crit_chance, crit_amplifier):
