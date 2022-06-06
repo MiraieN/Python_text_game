@@ -1,7 +1,7 @@
-#rrrrrrrrrrrrrrrrrrrrr
 from time import sleep
 import random
-#testing
+from typing import Dict
+
 
 class Stats:
     def __init__(self, name, power, health, crit_chance, crit_amplifier):
@@ -30,8 +30,8 @@ class Stats:
         print(f"Level: {self.level}")
         sleep(0.3)
 
-    def set_power_at_start(self, new):
-        self.power_at_start = new
+    def set_power_at_start(self, add):
+        self.power_at_start += add
 
     def power_default(self):
         self.power = self.power_at_start
@@ -54,6 +54,13 @@ class Enemies(Stats):
     def print_info(self):
         print("\nNew enemy spawned:")
         super().print_info()
+
+    def revive(self):
+        self.alive = True
+        self.hp = self.hp_at_start
+
+    def set_hp_at_start(self, add):
+        self.hp_at_start += add
 
 
 knight = Heroes("Knight", 13, 105, 24, 1.5)
@@ -99,6 +106,8 @@ def crit_check(att):
 
 
 def door_picking():
+    # was checking wolf lvlups
+    # wolf.print_info()
     print("\nU have 3 doors")
     print("which door to open? (1/2/3)")
     choose = None
@@ -135,22 +144,30 @@ def door_picking():
     # wolf
     elif rand_picks[choose - 1] == 2:
         print("\nYou've got an enemy: Wolf!.\nFight for your life!")
-        wolf.hp = wolf.hp_at_start
+
         lucky_pick(knight, wolf)
 
-        if knight.hp > 0:
-            level_up()
+        # reviving
+        wolf.revive()
+
     # golem
     elif rand_picks[choose - 1] == 3:
         print("\nYou've got an enemy: Golem!.\nFight for your life!")
-        golem.hp = golem.hp_at_start
+
         lucky_pick(knight, golem)
 
-        if knight.hp > 0:
-            level_up()
+        if not knight.alive:
             level_up()
 
-    print("\n\nDoors have been shuffled")
+        # reviving
+        golem.revive()
+
+    if knight.hp > 0 and (wolf.deaths > 0 or golem.deaths > 0):
+        level_up()
+        print("\nMonsters have leveled up")
+        mob_up(wolf)
+        mob_up(golem)
+        print("\n\nDoors have been shuffled")
 
 
 # finding first hit
@@ -177,12 +194,22 @@ def lucky_pick(hero, enemy):
     sleep(1.5)
 
 
+def mob_up(mob):
+    mob.set_hp_at_start(mobs_up["hp"])
+    mob.hp = mob.hp_at_start
+
+    mob.set_power_at_start(mobs_up["dmg"])
+    mob.power = mob.power_at_start
+
+    mob.crit_chance += mobs_up["cc"]
+    mob.crit_amplifier += mobs_up["ca"] / 100
+    print(f"\n{mob.name}:")
+    for k, v in mobs_up.items():
+        print(f"{k}: +{v}")
+        sleep(0.3)
+
+
 def level_up():
-    stats = {"Healthushechka": 10,
-             "Domogarov": 5,
-             "CC": 3,
-             "CA": 10
-             }
     knight.level += 1
     print()
     print("Level up!\nYou can choose one stat to upgrade")
@@ -206,7 +233,7 @@ def level_up():
         knight.hp += stats[stat]
     elif stat == "Domogarov":
         knight.power += stats[stat]
-        knight.set_power_at_start()
+        knight.set_power_at_start(stats[stat])
     elif stat == "CC":
         knight.crit_chance += stats[stat]
     elif stat == "CA":
@@ -238,6 +265,18 @@ def end_speech():
 
 # prep picks to random
 rand_picks = [1, 2, 3]
+
+stats = {"Healthushechka": 10,
+         "Domogarov": 5,
+         "CC": 3,
+         "CA": 10
+         }
+
+mobs_up: dict[str, int] = {"hp": 7,
+                           "dmg": 2,
+                           "cc": 2,
+                           "ca": 7
+                           }
 
 print("\nHello, traveler. Guide your hero to the win!")
 
